@@ -290,3 +290,268 @@ if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: re
     revealObserver.observe(el);
   });
 }
+
+/* ---- Pointer/scroll interaction layer ---- */
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const finePointer = matchMedia("(pointer: fine)").matches;
+
+// Scroll progress bar
+const progress = document.querySelector(".scroll-progress");
+if (progress) {
+  let tick = false;
+  const setProgress = () => {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    progress.style.transform = `scaleX(${max > 0 ? el.scrollTop / max : 0})`;
+    tick = false;
+  };
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(setProgress); } }, { passive: true });
+  setProgress();
+}
+
+// Sliding nav indicator tracks the active section link
+const navEl = document.querySelector(".topbar nav");
+const navInd = navEl?.querySelector(".nav-ind");
+if (navInd) {
+  const place = (a) => {
+    navInd.style.left = `${a.offsetLeft}px`;
+    navInd.style.top = `${a.offsetTop}px`;
+    navInd.style.width = `${a.offsetWidth}px`;
+    navInd.style.height = `${a.offsetHeight}px`;
+    navInd.style.opacity = "1";
+  };
+  const syncInd = () => {
+    const a = navEl.querySelector('a[aria-current="true"]');
+    if (a) place(a); else navInd.style.opacity = "0";
+  };
+  const mo = new MutationObserver(syncInd);
+  navLinks.forEach((a) => mo.observe(a, { attributes: true, attributeFilter: ["aria-current"] }));
+  addEventListener("resize", syncInd);
+  if (finePointer) {
+    navLinks.forEach((a) => a.addEventListener("pointerenter", () => place(a)));
+    navEl.addEventListener("pointerleave", syncInd);
+  }
+  syncInd();
+}
+
+// Hero glow + grid parallax ease toward the cursor
+const heroEl = document.querySelector(".hero");
+if (heroEl && finePointer && !reduceMotion) {
+  let tgx = .72, tgy = .2, gx = .72, gy = .2, raf = 0;
+  const glide = () => {
+    gx += (tgx - gx) * .12;
+    gy += (tgy - gy) * .12;
+    heroEl.style.setProperty("--mx", gx.toFixed(4));
+    heroEl.style.setProperty("--my", gy.toFixed(4));
+    raf = Math.abs(tgx - gx) + Math.abs(tgy - gy) > .001 ? requestAnimationFrame(glide) : 0;
+  };
+  heroEl.addEventListener("pointermove", (e) => {
+    const r = heroEl.getBoundingClientRect();
+    tgx = (e.clientX - r.left) / r.width;
+    tgy = (e.clientY - r.top) / r.height;
+    if (!raf) raf = requestAnimationFrame(glide);
+  });
+  heroEl.addEventListener("pointerleave", () => { tgx = .72; tgy = .2; if (!raf) raf = requestAnimationFrame(glide); });
+}
+
+// 3D tilt + sheen on project cards, magnetic pull on buttons
+if (finePointer && !reduceMotion) {
+  const bindTilt = (card) => {
+    card.addEventListener("pointermove", (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      card.style.setProperty("--ry", `${((px - .5) * 9).toFixed(2)}deg`);
+      card.style.setProperty("--rx", `${((.5 - py) * 9).toFixed(2)}deg`);
+      card.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
+      card.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
+    });
+    card.addEventListener("pointerleave", () => {
+      card.style.setProperty("--rx", "0deg");
+      card.style.setProperty("--ry", "0deg");
+    });
+  };
+  list.querySelectorAll(".project").forEach(bindTilt);
+
+  document.querySelectorAll(".button").forEach((b) => {
+    b.addEventListener("pointermove", (e) => {
+      const r = b.getBoundingClientRect();
+      b.style.setProperty("--tx", `${((e.clientX - (r.left + r.width / 2)) * .25).toFixed(1)}px`);
+      b.style.setProperty("--ty", `${((e.clientY - (r.top + r.height / 2)) * .3).toFixed(1)}px`);
+    });
+    b.addEventListener("pointerleave", () => {
+      b.style.setProperty("--tx", "0px");
+      b.style.setProperty("--ty", "0px");
+    });
+  });
+
+  // Portrait tilts toward the cursor
+  const portrait = document.querySelector(".portrait");
+  if (portrait) {
+    portrait.addEventListener("pointermove", (e) => {
+      const r = portrait.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      portrait.style.setProperty("--ry", `${((px - .5) * 12).toFixed(2)}deg`);
+      portrait.style.setProperty("--rx", `${((.5 - py) * 12).toFixed(2)}deg`);
+    });
+    portrait.addEventListener("pointerleave", () => {
+      portrait.style.setProperty("--rx", "0deg");
+      portrait.style.setProperty("--ry", "0deg");
+    });
+  }
+}
+
+// Cursor-reactive constellation in the hero (paused when offscreen)
+const canvas = document.querySelector(".hero-canvas");
+if (canvas && heroEl && finePointer && !reduceMotion) {
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const rootStyle = getComputedStyle(document.documentElement);
+  let W = 0, H = 0, pts = [], raf = 0, visible = true, pmx = -1e4, pmy = -1e4;
+  const resize = () => {
+    W = heroEl.clientWidth; H = heroEl.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.max(24, Math.min(72, Math.round(W * H / 15000)));
+    pts = Array.from({ length: n }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25,
+    }));
+  };
+  const draw = () => {
+    const col = rootStyle.getPropertyValue("--accent").trim() || "#ff7a1a";
+    ctx.clearRect(0, 0, W, H);
+    for (const p of pts) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      const dx = p.x - pmx, dy = p.y - pmy, d2 = dx * dx + dy * dy;
+      if (d2 < 16000) { const f = (1 - d2 / 16000) * .9, d = Math.sqrt(d2) + 1; p.x += dx / d * f; p.y += dy / d * f; }
+    }
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d = Math.hypot(dx, dy);
+        if (d < 120) {
+          ctx.globalAlpha = (1 - d / 120) * .25; ctx.strokeStyle = col; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = .7; ctx.fillStyle = col;
+    for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    raf = visible ? requestAnimationFrame(draw) : 0;
+  };
+  heroEl.addEventListener("pointermove", (e) => { const r = heroEl.getBoundingClientRect(); pmx = e.clientX - r.left; pmy = e.clientY - r.top; });
+  heroEl.addEventListener("pointerleave", () => { pmx = -1e4; pmy = -1e4; });
+  addEventListener("resize", resize);
+  resize();
+  new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible && !raf) raf = requestAnimationFrame(draw); }).observe(heroEl);
+  raf = requestAnimationFrame(draw);
+}
+
+// Custom cursor — only on the real top-level site, not inside preview iframes
+if (finePointer && !reduceMotion && window.self === window.top) {
+  const dot = document.createElement("div");
+  const ring = document.createElement("div");
+  dot.className = "cursor-dot cursor-hidden";
+  ring.className = "cursor-ring cursor-hidden";
+  document.body.append(dot, ring);
+  document.documentElement.classList.add("has-cursor");
+  let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my, craf = 0;
+  const spin = () => { rx += (mx - rx) * .2; ry += (my - ry) * .2; ring.style.transform = `translate(${rx}px, ${ry}px)`; craf = requestAnimationFrame(spin); };
+  addEventListener("pointermove", (e) => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = `translate(${mx}px, ${my}px)`;
+    dot.classList.remove("cursor-hidden"); ring.classList.remove("cursor-hidden");
+    if (!craf) craf = requestAnimationFrame(spin);
+  }, { passive: true });
+  addEventListener("pointerdown", () => ring.classList.add("press"));
+  addEventListener("pointerup", () => ring.classList.remove("press"));
+  document.addEventListener("pointerover", (e) => { if (e.target.closest("a, button, .project")) ring.classList.add("grow"); });
+  document.addEventListener("pointerout", (e) => { if (e.target.closest("a, button, .project")) ring.classList.remove("grow"); });
+  document.addEventListener("mouseleave", () => { dot.classList.add("cursor-hidden"); ring.classList.add("cursor-hidden"); });
+}
+
+// Click ripple on buttons
+if (!reduceMotion) {
+  document.querySelectorAll(".button").forEach((b) => {
+    b.addEventListener("pointerdown", (e) => {
+      const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height) * 2;
+      const rip = document.createElement("span");
+      rip.className = "ripple";
+      rip.style.width = rip.style.height = `${s}px`;
+      rip.style.left = `${e.clientX - r.left}px`;
+      rip.style.top = `${e.clientY - r.top}px`;
+      b.appendChild(rip);
+      setTimeout(() => rip.remove(), 650);
+    });
+  });
+}
+
+// Back-to-top with circular scroll-progress ring
+const toTop = document.querySelector(".to-top");
+if (toTop) {
+  const ring = toTop.querySelector(".bar");
+  const C = 2 * Math.PI * 22;
+  if (ring) { ring.style.strokeDasharray = `${C}`; ring.style.strokeDashoffset = `${C}`; }
+  let tick = false;
+  const upd = () => {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? el.scrollTop / max : 0;
+    if (ring) ring.style.strokeDashoffset = `${C * (1 - p)}`;
+    toTop.classList.toggle("show", el.scrollTop > 500);
+    tick = false;
+  };
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(upd); } }, { passive: true });
+  toTop.addEventListener("click", () => scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }));
+  upd();
+}
+
+// Tilt + spotlight on panels and the facts card, magnetic focus chips
+if (finePointer && !reduceMotion) {
+  const bindTiltSpot = (el, maxDeg) => {
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      el.style.setProperty("--ry", `${((px - .5) * maxDeg).toFixed(2)}deg`);
+      el.style.setProperty("--rx", `${((.5 - py) * maxDeg).toFixed(2)}deg`);
+      el.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
+      el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
+    });
+    el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
+  };
+  document.querySelectorAll(".panel, .facts").forEach((el) => bindTiltSpot(el, 5));
+  document.querySelectorAll(".focus li").forEach((li) => {
+    li.addEventListener("pointermove", (e) => {
+      const r = li.getBoundingClientRect();
+      li.style.transform = `translate(${((e.clientX - (r.left + r.width / 2)) * .3).toFixed(1)}px, ${((e.clientY - (r.top + r.height / 2)) * .4).toFixed(1)}px)`;
+    });
+    li.addEventListener("pointerleave", () => { li.style.transform = ""; });
+  });
+}
+
+// Decode (scramble) section headings as they scroll into view
+if (!reduceMotion && "IntersectionObserver" in window) {
+  const glyphs = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789/#*<>";
+  const scramble = (el) => {
+    const final = el.textContent, n = final.length, start = performance.now(), dur = 650;
+    const step = (t) => {
+      const prog = Math.min(1, (t - start) / dur), reveal = prog * n;
+      let out = "";
+      for (let i = 0; i < n; i++) {
+        if (final[i] === " ") out += " ";
+        else out += i < reveal ? final[i] : glyphs[(Math.random() * glyphs.length) | 0];
+      }
+      el.textContent = out;
+      if (prog < 1) requestAnimationFrame(step); else el.textContent = final;
+    };
+    requestAnimationFrame(step);
+  };
+  const headObs = new IntersectionObserver((es, obs) => {
+    es.forEach((e) => { if (e.isIntersecting) { scramble(e.target); obs.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -15% 0px" });
+  document.querySelectorAll(".section h2").forEach((h) => headObs.observe(h));
+}
