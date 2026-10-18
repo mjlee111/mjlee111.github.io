@@ -1,0 +1,6 @@
+# Editor backups created by _editor.html on save
+_backup/
+
+# Local source material — contains personal info, keep out of the public site
+*.pdf
+Screenshot_*.jpg
