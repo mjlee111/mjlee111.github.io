@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Site Editor</title>
+<!-- Local editor for this site. Underscore prefix keeps it out of the default GitHub Pages (Jekyll) build. -->
+<style>
+:root {
+  --bg: #161616;
+  --panel: #1e1e1e;
+  --panel-2: #272727;
+  --border: #353535;
+  --text: #ececec;
+  --soft: #9e9e9e;
+  --accent: #ff7a1a;
+  --accent-soft: rgb(255 122 26 / .14);
+  --on-accent: #1a1a1a;
+  --danger: #ff6161;
+  --ok: #4cc38a;
+  --font: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ededed;
+    --panel: #ffffff;
+    --panel-2: #f4f4f4;
+    --border: #dcdcdc;
+    --text: #1c1c1c;
+    --soft: #666666;
+    --accent: #e8650a;
+    --accent-soft: rgb(232 101 10 / .12);
+    --on-accent: #1c1c1c;
+    --danger: #c62828;
+    --ok: #1b8a55;
+    color-scheme: light;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 var(--font);
+}
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Toolbar */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 1rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.logo { font-weight: 800; letter-spacing: -.02em; margin-right: .4rem; }
+.logo span { color: var(--accent); }
+.status { color: var(--soft); font-size: 13px; }
+.status.dirty { color: var(--accent); }
+.spacer { flex: 1; }
+.btn {
+  padding: .45rem .95rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.btn.small { justify-self: start; padding: .28rem .7rem; font-size: 12.5px; }
+.btn.ghost { background: none; }
+.btn:disabled, .icon:disabled { opacity: .4; cursor: default; }
+.seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 999px; }
+.seg button {
+  padding: .25rem .7rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--soft);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); min-height: 0; }
+.form { overflow: auto; padding: .75rem; border-right: 1px solid var(--border); }
+.preview { display: flex; justify-content: center; min-height: 0; padding: .75rem; overflow: auto; }
+.frame-wrap { width: 100%; height: 100%; transition: width .2s; }
+.frame-wrap.mobile { width: 390px; flex: none; }
+#pv { display: block; width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) 55vh; }
+  .form { border-right: 0; border-bottom: 1px solid var(--border); }
+}
+
+/* Form */
+.empty { padding: 1.5rem 1rem; color: var(--soft); }
+.empty h2 { margin: 0 0 .75rem; color: var(--text); font-size: 18px; }
+.empty li { margin-bottom: .35rem; }
+.group { margin-bottom: .6rem; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+.group > summary {
+  display: flex;
+  justify-content: space-between;
+  padding: .7rem .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary::after { content: "▾"; color: var(--soft); transition: transform .2s; }
+.group:not([open]) > summary::after { transform: rotate(-90deg); }
+.group[open] > summary { border-bottom: 1px solid var(--border); }
+.group-body { display: grid; gap: .85rem; padding: .9rem; }
+.field { display: grid; gap: .3rem; min-width: 0; }
+.field-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.field-head label:first-child { color: var(--soft); font-size: 12.5px; }
+.tag { margin-left: .4rem; padding: 0 .3rem; border: 1px solid var(--border); border-radius: 4px; font-size: 10.5px; }
+input[type="text"], textarea {
+  width: 100%;
+  padding: .45rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel-2);
+}
+textarea { resize: vertical; min-height: 4.2em; field-sizing: content; }
+input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.invalid { border-color: var(--danger) !important; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.list { display: grid; gap: .5rem; }
+.list-title { color: var(--soft); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.item { display: grid; gap: .6rem; padding: .6rem; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); }
+.item .item { background: var(--panel); }
+.item input[type="text"], .item textarea { background: var(--panel); }
+.item .item input[type="text"], .item .item textarea { background: var(--panel-2); }
+.item-bar { display: flex; align-items: center; gap: .25rem; }
+.item-n { margin-right: auto; color: var(--soft); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  cursor: pointer;
+}
+.icon:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.icon.danger:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
+.panel-box { display: grid; gap: .7rem; padding: .7rem; border: 1px dashed var(--border); border-radius: 8px; }
+.tbd-box { display: inline-flex; align-items: center; gap: .3rem; color: var(--soft); font-size: 12px; cursor: pointer; }
+.tbd-box input { accent-color: var(--accent); margin: 0; }
+.img-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.thumb { width: 72px; height: 54px; object-fit: cover; border: 1px solid var(--border); border-radius: 6px; }
+.hint { margin: 0; color: var(--soft); font-size: 12px; }
+.missing { margin: 0; color: var(--soft); font-size: 12px; font-style: italic; }
+.warn { padding: .6rem .8rem; margin-bottom: .6rem; border: 1px solid var(--danger); border-radius: 8px; color: var(--danger); }
+.warn p { margin: 0; }
+.color-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1.2fr) 26px; align-items: center; gap: .5rem; }
+.color-row code { overflow: hidden; text-overflow: ellipsis; color: var(--soft); font: 12px ui-monospace, Consolas, monospace; }
+input[type="color"] { width: 34px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; }
+.swatch { width: 34px; height: 30px; border: 1px solid var(--border); border-radius: 6px; }
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 10;
+  max-width: min(40rem, calc(100vw - 2rem));
+  padding: .6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 10px 30px rgb(0 0 0 / .35);
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+#toast.show { opacity: 1; }
+#toast.ok { border-color: var(--ok); }
+#toast.error { border-color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <span class="logo">mjlee<span>.</span> editor</span>
+  <button id="btn-open" class="btn" type="button">사이트 폴더 열기</button>
+  <span id="status" class="status">폴더를 열어 시작하세요</span>
+  <span class="spacer"></span>
+  <span class="seg" id="seg-theme" role="group" aria-label="미리보기 테마"></span>
+  <span class="seg" id="seg-size" role="group" aria-label="미리보기 크기"></span>
+  <button id="btn-save" class="btn primary" type="button" disabled>저장 (Ctrl+S)</button>
+</header>
+
+<div class="layout">
+  <aside id="form" class="form">
+    <div class="empty">
+      <h2>사이트 편집기</h2>
+      <ol>
+        <li><b>사이트 폴더 열기</b>로 <code>index.html</code>이 있는 폴더를 선택합니다 (Chrome / Edge).</li>
+        <li>왼쪽에서 내용을 고치면 오른쪽 미리보기에 바로 반영됩니다.</li>
+        <li><b>저장</b>하면 바뀐 파일만 덮어쓰고, 덮어쓰기 전 내용은 <code>_backup/&lt;시각&gt;/</code>에 보관합니다.</li>
+        <li><b>tbd</b> 체크는 미완성 표시(노란 강조)입니다. 내용을 채웠으면 해제하세요.</li>
+      </ol>
+      <p id="fallback-note" hidden>이 브라우저는 폴더 저장을 지원하지 않습니다. <code>index.html</code>, <code>script.js</code>, <code>style.css</code>를 함께 선택해 열면, 저장할 때 수정된 파일이 다운로드됩니다. 이미지 업로드는 사용할 수 없습니다.</p>
+    </div>
+  </aside>
+  <section class="preview" aria-label="미리보기">
+    <div class="frame-wrap"><iframe id="pv" title="사이트 미리보기"></iframe></div>
+  </section>
+</div>
+
+<input id="fallback-input" type="file" multiple accept=".html,.js,.css" hidden>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+const SITE_FILES = ["index.html", "script.js", "style.css"];
+const FS_SUPPORTED = "showDirectoryPicker" in window;
+
+const S = {
+  mode: null,                    // "fs" (folder handle) | "download"
+  dir: null,                     // FileSystemDirectoryHandle in fs mode
+  base: {},                      // file text as last loaded or saved
+  doc: null,                     // parsed index.html, edited in place
+  projects: null,                // PROJECTS array, null if script.js could not be parsed
+  jsRange: null,                 // { start, end } of the PROJECTS literal in script.js
+  cssVars: null,                 // theme color declarations in style.css
+  changed: { html: false, js: false, css: false },
+  dirty: false,
+  warnings: [],
+  pendingImages: new Map(),      // site path -> File, written on save
+  imgCache: new Map(),           // site path -> data URL for preview
+  templates: new WeakMap(),      // list container -> clone of its first item
+};
+
+// ---------- Pure transforms (no UI) ----------
+const Core = {
+  // Locate the array literal assigned to PROJECTS; skips strings and comments.
+  findProjectsLiteral(js) {
+    const m = /const\s+PROJECTS\s*=\s*/.exec(js);
+    if (!m) return null;
+    let i = m.index + m[0].length;
+    if (js[i] !== "[") return null;
+    const start = i;
+    let depth = 0;
+    for (; i < js.length; i++) {
+      const c = js[i];
+      if (c === '"' || c === "'" || c === "`") {
+        for (i++; i < js.length && js[i] !== c; i++) if (js[i] === "\\") i++;
+        continue;
+      }
+      if (c === "/" && js[i + 1] === "/") { i = js.indexOf("\n", i); if (i < 0) return null; continue; }
+      if (c === "/" && js[i + 1] === "*") { i = js.indexOf("*/", i + 2); if (i < 0) return null; i++; continue; }
+      if (c === "[" || c === "{") depth++;
+      else if ((c === "]" || c === "}") && --depth === 0) return { start, end: i + 1 };
+    }
+    return null;
+  },
+
+  // Evaluates the literal from the user's own script.js (object literal only, no side effects expected).
+  parseProjects(js) {
+    const range = Core.findProjectsLiteral(js);
+    if (!range) throw new Error("script.js에서 PROJECTS 배열을 찾지 못했습니다");
+    const arr = new Function(`"use strict"; return (${js.slice(range.start, range.end)});`)();
+    if (!Array.isArray(arr)) throw new Error("PROJECTS가 배열이 아닙니다");
+    return { range, projects: arr.map(Core.normProject) };
+  },
+
+  normProject(p = {}) {
+    return {
+      ...p,
+      title: p.title ?? "",
+      year: p.year ?? "",
+      meta: p.meta ?? "",
+      summary: p.summary ?? "",
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      image: p.image ?? "",
+      details: Array.isArray(p.details) ? p.details : [],
+      links: Array.isArray(p.links) ? p.links : [],
+    };
+  },
+
+  KNOWN_KEYS: ["title", "year", "meta", "summary", "tags", "image", "details", "links"],
+  key: (k) => (/^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)),
+
+  // Formats PROJECTS in the same layout as the hand-written script.js.
+  formatProjects(arr) {
+    const s = (v) => JSON.stringify(v);
+    const obj = (o) => `{ ${Object.entries(o).filter(([, v]) => v !== undefined)
+      .map(([k, v]) => `${Core.key(k)}: ${s(v)}`).join(", ")} }`;
+    const val = (k, v) => {
+      if (k === "tags") return `[${v.map(s).join(", ")}]`;
+      if (k === "details") return v.length ? `[\n${v.map((d) => `      ${obj(d)}`).join(",\n")}\n    ]` : "[]";
+      if (k === "links") return v.length ? `[${v.map(obj).join(", ")}]` : "[]";
+      return s(v);
+    };
+    const one = (p) => {
+      const keys = [...Core.KNOWN_KEYS, ...Object.keys(p).filter((k) => !Core.KNOWN_KEYS.includes(k) && p[k] !== undefined)];
+      return `  {\n${keys.map((k) => `    ${Core.key(k)}: ${val(k, p[k])}`).join(",\n")}\n  }`;
+    };
+    return arr.length ? `[\n${arr.map(one).join(",\n")}\n]` : "[]";
+  },
+
+  replaceProjects(js, range, projects) {
+    return js.slice(0, range.start) + Core.formatProjects(projects) + js.slice(range.end);
+  },
+
+  // Index just past the "}" matching the "{" at openIdx.
+  blockEnd(css, openIdx) {
+    let depth = 0;
+    for (let i = openIdx; i < css.length; i++) {
+      if (css.startsWith("/*", i)) { i = css.indexOf("*/", i + 2); if (i < 0) return -1; i++; continue; }
+      if (css[i] === "{") depth++;
+      else if (css[i] === "}" && --depth === 0) return i + 1;
+    }
+    return -1;
+  },
+
+  // Color custom properties in the first :root block and in the light-scheme :root block.
+  parseThemeVars(css) {
+    const out = [];
+    const scan = (block, openIdx) => {
+      const end = Core.blockEnd(css, openIdx);
+      if (end < 0) return;
+      const re = /(--[\w-]+)\s*:\s*([^;{}]+);/g;
+      re.lastIndex = openIdx;
+      let m;
+      while ((m = re.exec(css)) && m.index < end) {
+        const value = m[2].trim();
+        if (!/^(#|rgba?\(|hsla?\()/i.test(value)) continue;
+        const start = m.index + m[0].length - 1 - m[2].length;
+        out.push({ block, name: m[1], value, orig: value, start, end: start + value.length });
+      }
+    };
+    const root = /:root\s*\{/.exec(css);
+    if (root) scan("base", root.index + root[0].length - 1);
+    const media = /@media\s*\(\s*prefers-color-scheme\s*:\s*light\s*\)\s*\{/.exec(css);
+    if (media) {
+      const re = /:root\s*\{/g;
+      re.lastIndex = media.index;
+      const m = re.exec(css);
+      if (m) scan("light", m.index + m[0].length - 1);
+    }
+    return out;
+  },
+
+  applyThemeVars(css, vars) {
+    return [...vars].sort((a, b) => b.start - a.start).reduce((acc, v) =>
+      v.value === v.orig ? acc : acc.slice(0, v.start) + v.value + acc.slice(v.end), css);
+  },
+
+  // Serialize while undoing the parser's whitespace and boolean-attribute normalization.
+  serializeDoc(doc, original) {
+    const doctype = /^\s*(<!doctype[^>]*>)/i.exec(original)?.[1] ?? "<!DOCTYPE html>";
+    const html = doc.documentElement.outerHTML
+      .replace(/^(<html[^>]*>)(?=<head)/i, "$1\n")
+      .replace(/\s*<\/body>\s*<\/html>\s*$/i, "\n</body>\n</html>")
+      .replace(/ (crossorigin|hidden|defer|async|disabled)=""/g, " $1");
+    return `${doctype}\n${html}\n`;
+  },
+};
+
+// ---------- Small DOM helpers ----------
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
+    else if (k === "class") el.className = v;
+    else if (typeof v !== "string" && k in el) el[k] = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  el.append(...kids.flat(2).filter((k) => k != null && k !== false));
+  return el;
+}
+let uid = 0;
+let toastTimer;
+function toast(msg, kind = "") {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = `show ${kind}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = kind), kind === "error" ? 8000 : 4000);
+}
+const normPath = (p) => String(p ?? "").trim().replace(/^\.\//, "");
+const safeName = (n) => n.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "image";
+const toDataUrl = (blob) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result);
+  r.onerror = () => rej(r.error);
+  r.readAsDataURL(blob);
+});
+
+// ---------- File access ----------
+async function fileHandle(path, create = false, dir = S.dir) {
+  const parts = normPath(path).split("/").filter(Boolean);
+  let d = dir;
+  for (const p of parts.slice(0, -1)) d = await d.getDirectoryHandle(p, { create });
+  return d.getFileHandle(parts.at(-1), { create });
+}
+const readText = async (path, dir = S.dir) => (await (await fileHandle(path, false, dir)).getFile()).text();
+const readBlob = async (path) => (await fileHandle(path)).getFile();
+async function writeFile(path, data) {
+  const w = await (await fileHandle(path, true)).createWritable();
+  await w.write(data);
+  await w.close();
+}
+async function existsOnDisk(path) {
+  if (S.mode !== "fs") return false;
+  try { await fileHandle(path); return true; } catch { return false; }
+}
+function download(name, text) {
+  const type = name.endsWith(".css") ? "text/css" : name.endsWith(".js") ? "text/javascript" : "text/html";
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  h("a", { href: url, download: name }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ---------- Load / save ----------
+async function openSite() {
+  if (S.dirty && !confirm("저장하지 않은 변경 사항이 있습니다. 버리고 새로 열까요?")) return;
+  if (!FS_SUPPORTED) { $("#fallback-input").click(); return; }
+  let dir;
+  try {
+    dir = await window.showDirectoryPicker({ id: "mjlee-site", mode: "readwrite" });
+  } catch (e) {
+    if (e.name !== "AbortError") toast(`폴더를 열 수 없습니다: ${e.message}`, "error");
+    return;
+  }
+  const texts = {};
+  for (const name of SITE_FILES) {
+    try { texts[name] = await readText(name, dir); } catch { /* optional except index.html */ }
+  }
+  if (texts["index.html"] == null) { toast("선택한 폴더에 index.html이 없습니다", "error"); return; }
+  S.mode = "fs";
+  S.dir = dir;
+  load(texts);
+}
+
+async function openFallback(files) {
+  const texts = {};
+  for (const f of files) if (SITE_FILES.includes(f.name)) texts[f.name] = await f.text();
+  if (texts["index.html"] == null) { toast("index.html을 포함해 선택하세요", "error"); return; }
+  S.mode = "download";
+  S.dir = null;
+  load(texts);
+}
+
+function load(texts) {
+  S.base = { ...texts };
+  S.doc = new DOMParser().parseFromString(texts["index.html"], "text/html");
+  S.warnings = [];
+  S.projects = null;
+  S.jsRange = null;
+  if (texts["script.js"] != null) {
+    try {
+      const r = Core.parseProjects(texts["script.js"]);
+      S.projects = r.projects;
+      S.jsRange = r.range;
+    } catch (e) { S.warnings.push(`프로젝트 편집 비활성화: ${e.message}`); }
+  } else S.warnings.push("script.js가 없어 프로젝트 편집을 사용할 수 없습니다");
+  if (texts["style.css"] != null) S.cssVars = Core.parseThemeVars(texts["style.css"]);
+  else { S.cssVars = null; S.warnings.push("style.css가 없어 테마 색상 편집을 사용할 수 없습니다"); }
+  S.changed = { html: false, js: false, css: false };
+  S.dirty = false;
+  S.pendingImages.clear();
+  S.imgCache.clear();
+  S.templates = new WeakMap();
+  renderForm();
+  updateStatus();
+  renderPreview();
+}
+
+// Only files whose editor section changed are regenerated.
+function buildOutputs() {
+  const out = {};
+  if (S.changed.html) {
+    const html = Core.serializeDoc(S.doc, S.base["index.html"]);
+    if (html !== S.base["index.html"]) out["index.html"] = html;
+  }
+  if (S.changed.js && S.projects) {
+    const js = Core.replaceProjects(S.base["script.js"], S.jsRange, S.projects);
+    if (js !== S.base["script.js"]) out["script.js"] = js;
+  }
+  if (S.changed.css && S.cssVars) {
+    const css = Core.applyThemeVars(S.base["style.css"], S.cssVars);
+    if (css !== S.base["style.css"]) out["style.css"] = css;
+  }
+  return out;
+}
+
+// Pending uploads still referenced by the page or a project.
+function referencedImages() {
+  const refs = new Set([...S.doc.querySelectorAll("img[src]")].map((i) => normPath(i.getAttribute("src"))));
+  (S.projects || []).forEach((p) => refs.add(normPath(p.image)));
+  return [...S.pendingImages].filter(([p]) => refs.has(p));
+}
+
+async function save() {
+  if (!S.doc) return;
+  const out = buildOutputs();
+  const imgs = S.mode === "fs" ? referencedImages() : [];
+  const names = Object.keys(out);
+  if (!names.length && !imgs.length) {
+    S.dirty = false;
+    updateStatus();
+    toast("저장할 변경 사항이 없습니다");
+    return;
+  }
+
+  if (S.mode === "download") {
+    names.forEach((n) => download(n, out[n]));
+    S.base = { ...S.base, ...out };
+    load(S.base);
+    toast(`다운로드: ${names.join(", ")} — 사이트 폴더의 같은 파일과 교체하세요`, "ok");
+    return;
+  }
+
+  try {
+    const disk = {};
+    for (const n of names) disk[n] = await readText(n).catch(() => null);
+    const external = names.filter((n) => disk[n] !== S.base[n]);
+    if (external.length && !confirm(
+      `${external.join(", ")} 파일이 편집기에서 연 뒤 다른 곳에서 수정되었습니다.\n` +
+      "덮어쓸까요? (현재 디스크 내용은 _backup에 보관됩니다)")) return;
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const backup = `_backup/${stamp}`;
+    for (const n of names) if (disk[n] != null) await writeFile(`${backup}/${n}`, disk[n]);
+    for (const [p] of imgs) {
+      const old = await readBlob(p).catch(() => null);
+      if (old) await writeFile(`${backup}/${p}`, old);
+    }
+    for (const [p, f] of imgs) await writeFile(p, f);
+    for (const n of names) await writeFile(n, out[n]);
+
+    toast(`저장 완료: ${[...names, ...imgs.map(([p]) => p)].join(", ")} · 백업: ${backup}`, "ok");
+    load({ ...S.base, ...out });
+  } catch (e) {
+    toast(`저장 실패: ${e.message} — 일부 파일만 저장됐을 수 있습니다. _backup 폴더를 확인하세요.`, "error");
+  }
+}
+
+function markDirty(kind = "html") {
+  S.changed[kind] = true;
+  S.dirty = true;
+  updateStatus();
+  schedulePreview();
+}
+
+function updateStatus() {
+  const st = $("#status");
+  if (!S.doc) return;
+  const where = S.mode === "fs" ? `폴더: ${S.dir.name}` : "다운로드 모드";
+  st.textContent = `${where} · ${S.dirty ? "저장 안 된 변경 있음" : "변경 없음"}`;
+  st.classList.toggle("dirty", S.dirty);
+  $("#btn-save").disabled = false;
+}
+
+// ---------- Form building blocks ----------
+const edges = (raw) => (raw.trim() ? [raw.match(/^\s*/)[0], raw.match(/\s*$/)[0]] : ["", ""]);
+const missing = (label) => h("p", { class: "missing" }, `${label}: index.html에서 요소를 찾지 못했습니다`);
+
+function field(label, input, { extra = null, aside = null, tag = null } = {}) {
+  input.id = `f${++uid}`;
+  return h("div", { class: "field" },
+    h("div", { class: "field-head" },
+      h("label", { for: input.id }, label, tag ? h("span", { class: "tag" }, tag) : null), aside),
+    input, extra);
+}
+
+function textInput(value, onInput, { multiline = false, placeholder = null, kind = "html" } = {}) {
+  const el = multiline ? h("textarea", { rows: 2 }) : h("input", { type: "text" });
+  el.value = value ?? "";
+  el.spellcheck = false;
+  if (placeholder) el.placeholder = placeholder;
+  // onInput may return false to reject the value (nothing is marked dirty)
+  el.addEventListener("input", () => { if (onInput(el.value) !== false) markDirty(kind); });
+  return el;
+}
+
+function tbdBox(el) {
+  const cb = h("input", { type: "checkbox", checked: el.classList.contains("tbd") });
+  cb.addEventListener("change", () => {
+    el.classList.toggle("tbd", cb.checked);
+    if (!el.classList.length) el.removeAttribute("class");
+    markDirty("html");
+  });
+  return h("label", { class: "tbd-box", title: "미완성 표시. 내용을 채웠으면 해제하세요" }, cb, "tbd");
+}
+
+// Binds an element's text (or inner HTML when it has child markup or html is set).
+function fEl(label, el, { html = false, multiline, tbd = false } = {}) {
+  if (!el) return missing(label);
+  const useHtml = html || el.children.length > 0;
+  const raw = useHtml ? el.innerHTML : el.textContent;
+  const [lead, trail] = edges(raw);
+  const input = textInput(raw.trim(), (v) => {
+    if (useHtml) el.innerHTML = lead + v + trail;
+    else el.textContent = lead + v + trail;
+  }, { multiline: multiline ?? useHtml });
+  return field(label, input, { tag: useHtml ? "HTML" : null, aside: tbd ? tbdBox(el) : null });
+}
+
+// Binds a single text node, keeping its surrounding whitespace.
+function fNode(label, node) {
+  if (!node) return missing(label);
+  const [lead, trail] = edges(node.data);
+  return field(label, textInput(node.data.trim(), (v) => { node.data = lead + v + trail; }));
+}
+
+function fAttr(label, el, attr, opts = {}) {
+  if (!el) return missing(label);
+  return field(label, textInput(el.getAttribute(attr) ?? "", (v) => el.setAttribute(attr, v), opts));
+}
+
+// First or last non-empty direct text node; created if absent.
+function directText(el, pick = "last") {
+  if (!el) return null;
+  const nodes = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE && n.data.trim());
+  if (nodes.length) return pick === "first" ? nodes[0] : nodes.at(-1);
+  const t = el.ownerDocument.createTextNode("");
+  pick === "first" ? el.prepend(t) : el.append(t);
+  return t;
+}
+
+function structural(kind) {
+  markDirty(kind);
+  renderForm();
+}
+
+function itemBar(label, i, n, move, del) {
+  return h("div", { class: "item-bar" },
+    h("span", { class: "item-n", title: label }, label),
+    h("button", { type: "button", class: "icon", title: "위로", "aria-label": "위로", disabled: i === 0, onclick: () => move(-1) }, "↑"),
+    h("button", { type: "button", class: "icon", title: "아래로", "aria-label": "아래로", disabled: i === n - 1, onclick: () => move(1) }, "↓"),
+    h("button", { type: "button", class: "icon danger", title: "삭제", "aria-label": "삭제",
+      onclick: () => { if (confirm(`${label} 항목을 삭제할까요?`)) del(); } }, "✕"));
+}
+
+// Swap two sibling nodes without disturbing the whitespace between them.
+function swapNodes(a, b) {
+  const mark = a.ownerDocument.createComment("");
+  a.replaceWith(mark);
+  b.replaceWith(a);
+  mark.replaceWith(b);
+}
+function removeNode(n) {
+  const prev = n.previousSibling;
+  if (prev && prev.nodeType === Node.TEXT_NODE && !prev.data.trim()) prev.remove();
+  n.remove();
+}
+
+// Repeatable DOM items; "add" duplicates the last item (or the first item seen at load).
+function fList(title, container, sel, renderItem, { addLabel = "항목 추가" } = {}) {
+  if (!container) return missing(title || "목록");
+  const items = [...container.children].filter((c) => c.matches(sel));
+  if (items[0] && !S.templates.has(container)) S.templates.set(container, items[0].cloneNode(true));
+  const add = () => {
+    const last = items.at(-1);
+    const node = (last ?? S.templates.get(container)).cloneNode(true);
+    if (last) {
+      const ws = last.previousSibling;
+      last.after(ws && ws.nodeType === Node.TEXT_NODE && !ws.data.trim() ? ws.data : "\n", node);
+    } else container.append(node);
+    structural("html");
+  };
+  return h("div", { class: "list" },
+    title ? h("div", { class: "list-title" }, title) : null,
+    items.map((it, i) => h("div", { class: "item" },
+      itemBar(`#${i + 1}`, i, items.length, (d) => { swapNodes(it, items[i + d]); structural("html"); },
+        () => { removeNode(it); structural("html"); }),
+      renderItem(it, i))),
+    items.length || S.templates.has(container)
+      ? h("button", { type: "button", class: "btn small", onclick: add }, `+ ${addLabel}`)
+      : h("p", { class: "hint" }, "추가할 기준 항목이 없습니다"));
+}
+
+// Repeatable entries of a plain array (projects, details, links).
+function arrList(title, arr, make, render, { label = (x, i) => `#${i + 1}`, addLabel = `${title} 추가` } = {}) {
+  return h("div", { class: "list" },
+    h("div", { class: "list-title" }, title),
+    arr.map((x, i) => h("div", { class: "item" },
+      itemBar(label(x, i), i, arr.length, (d) => { [arr[i], arr[i + d]] = [arr[i + d], arr[i]]; structural("js"); },
+        () => { arr.splice(i, 1); structural("js"); }),
+      render(x, i))),
+    h("button", { type: "button", class: "btn small", onclick: () => { arr.push(make()); structural("js"); } }, `+ ${addLabel}`));
+}
+
+function imageField(label, path, set, { kind = "html", fixedName = null, clearable = true } = {}) {
+  const thumb = h("img", { class: "thumb", alt: "", hidden: true });
+  const showThumb = async (p) => {
+    const url = p ? await imgUrl(p) : null;
+    thumb.hidden = !url;
+    if (url) thumb.src = url;
+  };
+  const input = textInput(path, (v) => set(normPath(v)), { kind, placeholder: "images/파일명.jpg" });
+  input.addEventListener("change", () => showThumb(normPath(input.value)));
+
+  const picker = h("input", { type: "file", accept: "image/*", hidden: true });
+  picker.addEventListener("change", async () => {
+    const f = picker.files[0];
+    picker.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { toast("이미지 파일만 선택할 수 있습니다", "error"); return; }
+    const ext = (/\.[a-z0-9]+$/i.exec(f.name)?.[0] ?? ".jpg").toLowerCase();
+    const p = fixedName ? `images/${fixedName}${ext}` : `images/${safeName(f.name)}`;
+    if (!S.pendingImages.has(p) && await existsOnDisk(p) &&
+        !confirm(`${p} 파일이 이미 있습니다. 저장할 때 덮어쓸까요? (기존 파일은 _backup에 보관됩니다)`)) return;
+    S.pendingImages.set(p, f);
+    S.imgCache.set(p, await toDataUrl(f));
+    input.value = p;
+    set(p);
+    showThumb(p);
+    markDirty(kind);
+    if (f.size > 1.5 * 1024 * 1024) toast(`${(f.size / 1048576).toFixed(1)}MB 이미지입니다. 웹용으로 줄여서 쓰는 것을 권장합니다.`);
+  });
+
+  const fs = S.mode === "fs";
+  showThumb(path);
+  return field(label, input, {
+    extra: h("div", { class: "img-tools" },
+      h("button", { type: "button", class: "btn small", disabled: !fs, onclick: () => picker.click() }, "이미지 선택"),
+      clearable ? h("button", { type: "button", class: "btn small ghost",
+        onclick: () => { input.value = ""; set(""); showThumb(""); markDirty(kind); } }, "비우기") : null,
+      picker, thumb,
+      fs ? null : h("span", { class: "hint" }, "다운로드 모드에서는 업로드할 수 없습니다")),
+  });
+}
+
+function colorRow(v) {
+  const hex6 = (s) => {
+    const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s.trim());
+    if (!m) return null;
+    return `#${m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1]}`.toLowerCase();
+  };
+  const usePicker = !!hex6(v.value);
+  const picker = h("input", { type: "color", title: "색상 선택", "aria-label": `${v.name} 색상 선택` });
+  const swatch = h("span", { class: "swatch", "aria-hidden": "true" });
+  const reset = h("button", { type: "button", class: "icon", title: "원래 값으로", "aria-label": "원래 값으로" }, "↺");
+  const sync = () => {
+    const x = hex6(v.value);
+    if (x) picker.value = x;
+    swatch.style.background = v.value;
+    reset.hidden = v.value === v.orig;
+  };
+  const text = textInput(v.value, (val) => {
+    const ok = CSS.supports("color", val.trim());
+    text.classList.toggle("invalid", !ok);
+    if (!ok) return false;
+    v.value = val.trim();
+    sync();
+  }, { kind: "css" });
+  text.setAttribute("aria-label", v.name);
+  picker.addEventListener("input", () => {
+    v.value = picker.value;
+    text.value = picker.value;
+    text.classList.remove("invalid");
+    sync();
+    markDirty("css");
+  });
+  reset.addEventListener("click", () => {
+    v.value = v.orig;
+    text.value = v.orig;
+    text.classList.remove("invalid");
+    sync();
+    markDirty("css");
+  });
+  sync();
+  return h("div", { class: "color-row" }, usePicker ? picker : swatch, h("code", { title: v.name }, v.name), text, reset);
+}
+
+// ---------- Form sections ----------
+const openGroups = new Set(["hero"]);
+function group(key, title, ...content) {
+  const d = h("details", { class: "group", open: openGroups.has(key) },
+    h("summary", {}, title), h("div", { class: "group-body" }, ...content));
+  d.addEventListener("toggle", () => (d.open ? openGroups.add(key) : openGroups.delete(key)));
+  return d;
+}
+
+function sectionHead(section) {
+  if (!section) return missing("섹션");
+  const note = section.querySelector(":scope > .section-note");
+  return [fEl("섹션 제목", section.querySelector(":scope > h2")), note ? fEl("안내 문구", note) : null];
+}
+
+function heroFields() {
+  const q = (s) => S.doc.querySelector(s);
+  const h1 = q(".hero h1");
+  const primary = q(".hero .button.primary");
+  const ghost = q(".hero .button.ghost");
+  const img = q(".hero .portrait img");
+  return [
+    fNode("상단 배지", directText(q(".hero .eyebrow"))) ,
+    h("div", { class: "row" },
+      h1 ? fNode("이름 (앞부분)", directText(h1, "first")) : missing("이름"),
+      fEl("이름 (오렌지 강조)", h1?.querySelector(".accent"))),
+    fEl("소개 문장", q(".hero .lede"), { multiline: true }),
+    h("div", { class: "row" },
+      primary ? fNode("주 버튼 텍스트", directText(primary, "first")) : missing("주 버튼"),
+      fAttr("주 버튼 링크", primary, "href")),
+    h("div", { class: "row" }, fEl("보조 버튼 텍스트", ghost), fAttr("보조 버튼 링크", ghost, "href")),
+    img ? imageField("프로필 사진", img.getAttribute("src") ?? "", (p) => img.setAttribute("src", p),
+      { fixedName: "profile", clearable: false }) : missing("프로필 사진"),
+    h("div", { class: "row" },
+      fAttr("사진 설명 (alt)", img, "alt"),
+      fEl("사진 없을 때 이니셜", q(".hero .portrait-fallback"))),
+  ];
+}
+
+function factRow(row) {
+  const dt = row.querySelector("dt");
+  const dd = row.querySelector("dd");
+  if (dd?.classList.contains("links")) {
+    return [fEl("라벨", dt), fList("링크", dd, "a", (a) => [
+      fEl("텍스트", a, { tbd: true }), fAttr("주소 (href)", a, "href"),
+    ], { addLabel: "링크 추가" })];
+  }
+  return [fEl("라벨", dt), fEl("값", dd, { html: true, multiline: false, tbd: true })];
+}
+
+function panels(sectionSel, renderItems) {
+  return [...S.doc.querySelectorAll(`${sectionSel} .panel`)].map((p, i) =>
+    h("div", { class: "panel-box" }, fEl(`패널 ${i + 1} 제목`, p.querySelector("h3")), renderItems(p)));
+}
+const timelineItems = (p) => fList("항목", p.querySelector(".timeline"), "li", (li) => [
+  fEl("기간", li.querySelector(".when"), { tbd: true }),
+  fEl("제목", li.querySelector("strong"), { html: true, multiline: false, tbd: true }),
+  fEl("설명", li.querySelector("p"), { tbd: true }),
+]);
+// A .plain list whose items are each a single link (e.g. Press) gets text + URL fields;
+// any other list edits the item content directly.
+const isLinkItem = (li) => {
+  const a = li.querySelector("a");
+  return a && li.children.length === 1 && li.firstElementChild === a &&
+    !li.textContent.replace(a.textContent, "").trim();
+};
+function plainItems(p) {
+  const listEl = p.querySelector(".plain");
+  const items = listEl ? [...listEl.children].filter((c) => c.matches("li")) : [];
+  const linky = items.length > 0 && items.every(isLinkItem);
+  return fList("항목", listEl, "li", (li) => {
+    const a = li.querySelector("a");
+    if (linky && a) return [fEl("텍스트", a), fAttr("주소 (href)", a, "href")];
+    return fEl("내용", li, { html: true, multiline: false, tbd: true });
+  });
+}
+
+function projectsEditor() {
+  if (!S.projects) return h("p", { class: "missing" }, "script.js의 PROJECTS를 읽지 못해 프로젝트 편집을 사용할 수 없습니다");
+  const js = { kind: "js" };
+  return arrList("프로젝트", S.projects,
+    () => Core.normProject({ title: "New project", year: String(new Date().getFullYear()) }),
+    (p) => [
+      field("제목", textInput(p.title, (v) => { p.title = v; }, js)),
+      h("div", { class: "row" },
+        field("연도", textInput(p.year, (v) => { p.year = v; }, js)),
+        field("분류 (meta)", textInput(p.meta, (v) => { p.meta = v; }, js))),
+      field("요약", textInput(p.summary, (v) => { p.summary = v; }, { ...js, multiline: true })),
+      field("태그 (쉼표로 구분)", textInput(p.tags.join(", "), (v) => {
+        p.tags = v.split(",").map((t) => t.trim()).filter(Boolean);
+      }, js)),
+      imageField("이미지", p.image, (path) => { p.image = path; }, { kind: "js" }),
+      arrList("상세 내용", p.details, () => ({ heading: "", text: "" }), (d) => [
+        field("소제목", textInput(d.heading, (v) => { d.heading = v; }, js)),
+        field("내용", textInput(d.text, (v) => { d.text = v; }, { ...js, multiline: true })),
+      ]),
+      arrList("링크", p.links, () => ({ label: "", url: "" }), (l) => [
+        h("div", { class: "row" },
+          field("텍스트", textInput(l.label, (v) => { l.label = v; }, js)),
+          field("주소", textInput(l.url, (v) => { l.url = v; }, js))),
+      ]),
+    ],
+    { label: (p, i) => `#${i + 1} ${p.title}` });
+}
+
+function themeEditor() {
+  if (!S.cssVars) return h("p", { class: "missing" }, "style.css를 읽지 못했습니다");
+  const blocks = [["base", "기본 (다크)"], ["light", "라이트 (OS 라이트 모드)"]];
+  return [
+    h("p", { class: "hint" }, "rgb() 값(예: --accent-soft)은 오렌지를 바꿀 때 직접 같이 맞춰 주세요."),
+    blocks.map(([b, title]) => {
+      const vars = S.cssVars.filter((v) => v.block === b);
+      return vars.length ? h("div", { class: "list" }, h("div", { class: "list-title" }, title), vars.map(colorRow)) : null;
+    }),
+  ];
+}
+
+function renderForm() {
+  const form = $("#form");
+  const y = form.scrollTop;
+  const d = S.doc;
+  const q = (s) => d.querySelector(s);
+  uid = 0;
+  form.replaceChildren(...[
+    S.warnings.length ? h("div", { class: "warn" }, S.warnings.map((w) => h("p", {}, w))) : null,
+    group("site", "사이트 정보",
+      fEl("페이지 제목 (title)", q("title")),
+      fAttr("검색 설명 (meta description)", q('meta[name="description"]'), "content", { multiline: true })),
+    group("nav", "상단 메뉴",
+      fEl("로고 텍스트", q(".topbar .brand")),
+      [...d.querySelectorAll(".topbar nav a")].map((a) => fEl(`메뉴 (${a.getAttribute("href")})`, a))),
+    group("hero", "Hero", heroFields()),
+    group("meta", "Hero 정보 바", fList(null, q(".hero-meta"), "li", (li) => h("div", { class: "row" },
+      fEl("라벨", li.querySelector("span")), fNode("값", directText(li))))),
+    group("about", "About",
+      sectionHead(d.getElementById("about")),
+      fList("문단", q("#about .prose"), "p", (p) => fEl("내용", p, { html: true, multiline: true, tbd: true }), { addLabel: "문단 추가" }),
+      fList("정보", q("#about .facts"), "div", factRow, { addLabel: "정보 추가" }),
+      fEl("소제목", q("#about > h3")),
+      fList("Focus 항목", q("#about .focus"), "li", (li) => fEl("내용", li, { tbd: true }))),
+    group("projects", "Projects", sectionHead(d.getElementById("projects")), projectsEditor()),
+    group("experience", "Education and experience", sectionHead(d.getElementById("experience")), panels("#experience", timelineItems)),
+    group("activities", "Activities", sectionHead(d.getElementById("activities")), panels("#activities", plainItems)),
+    group("footer", "푸터",
+      fEl("문구", q(".footer > span")),
+      h("div", { class: "row" }, fEl("링크 텍스트", q(".footer > a")), fAttr("링크 주소", q(".footer > a"), "href"))),
+    group("theme", "테마 색상", themeEditor()),
+  ].filter(Boolean));
+  form.scrollTop = y;
+}
+
+// ---------- Preview ----------
+const PV = { theme: "system", size: "desktop" };
+const PREVIEW_CSS = "\n.reveal{opacity:1!important;transform:none!important;transition:none!important}";
+// Keeps navigation inside the preview: in-page anchors scroll, external links open a new tab.
+const PREVIEW_HELPER = `document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[href]");
+  if (!a) return;
+  const href = a.getAttribute("href");
+  e.preventDefault();
+  if (href.startsWith("#")) {
+    const t = href.length > 1 && document.getElementById(href.slice(1));
+    (t || document.documentElement).scrollIntoView({ behavior: "smooth" });
+  } else if (/^(https?:|mailto:)/.test(href)) window.open(href, "_blank", "noopener");
+});`;
+
+async function imgUrl(path) {
+  const p = normPath(path);
+  if (!p || /^(https?:|data:|blob:)/.test(p)) return null;
+  if (S.imgCache.has(p)) return S.imgCache.get(p);
+  let url = null;
+  if (S.mode === "fs") {
+    try { url = await toDataUrl(await readBlob(p)); } catch { /* missing file: preview shows fallback */ }
+  }
+  S.imgCache.set(p, url);
+  return url;
+}
+
+function previewCss() {
+  let css = S.base["style.css"] ?? "";
+  if (S.cssVars) css = Core.applyThemeVars(css, S.cssVars);
+  if (PV.theme !== "system") {
+    css = css.replace(/\(\s*prefers-color-scheme\s*:\s*(light|dark)\s*\)/g, (_, s) => (s === PV.theme ? "all" : "not all"));
+  }
+  return css + PREVIEW_CSS;
+}
+
+let pvTimer;
+function schedulePreview() {
+  clearTimeout(pvTimer);
+  pvTimer = setTimeout(renderPreview, 250);
+}
+
+async function renderPreview() {
+  if (!S.doc) return;
+  const doc = S.doc.cloneNode(true);
+  for (const img of doc.querySelectorAll("img[src]")) {
+    const url = await imgUrl(img.getAttribute("src"));
+    if (url) img.setAttribute("src", url);
+  }
+
+  let js = S.base["script.js"] ?? "";
+  if (S.projects) {
+    const mapped = [];
+    for (const p of S.projects) mapped.push({ ...p, image: (await imgUrl(p.image)) ?? p.image });
+    js = Core.replaceProjects(js, S.jsRange, mapped);
+  }
+
+  doc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+    if (normPath(l.getAttribute("href")) !== "style.css") return;
+    const st = doc.createElement("style");
+    st.textContent = previewCss().replace(/<\/style/gi, "<\\/style");
+    l.replaceWith(st);
+  });
+  doc.querySelectorAll("script[src]").forEach((s) => {
+    if (normPath(s.getAttribute("src")) !== "script.js") return;
+    const n = doc.createElement("script");
+    n.textContent = js.replace(/<\/script/gi, "<\\/script");
+    s.replaceWith(n);
+  });
+  const helper = doc.createElement("script");
+  helper.textContent = PREVIEW_HELPER;
+  doc.body.append(helper);
+
+  const pv = $("#pv");
+  let y = 0;
+  try { y = pv.contentWindow.scrollY; } catch { /* not yet loaded */ }
+  pv.onload = () => { try { pv.contentWindow.scrollTo({ top: y, behavior: "instant" }); } catch { /* ignore */ } };
+  pv.srcdoc = `<!DOCTYPE html>\n${doc.documentElement.outerHTML}`;
+}
+
+function renderSeg(id, key, options) {
+  $(id).replaceChildren(...options.map(([value, label]) => h("button", {
+    type: "button",
+    "aria-pressed": String(PV[key] === value),
+    onclick: () => {
+      PV[key] = value;
+      renderSeg(id, key, options);
+      if (key === "size") $(".frame-wrap").classList.toggle("mobile", value === "mobile");
+      else renderPreview();
+    },
+  }, label)));
+}
+
+// ---------- Wiring ----------
+renderSeg("#seg-theme", "theme", [["system", "시스템"], ["dark", "다크"], ["light", "라이트"]]);
+renderSeg("#seg-size", "size", [["desktop", "데스크톱"], ["mobile", "모바일"]]);
+if (!FS_SUPPORTED) {
+  $("#btn-open").textContent = "사이트 파일 열기";
+  $("#fallback-note").hidden = false;
+}
+$("#btn-open").addEventListener("click", openSite);
+$("#btn-save").addEventListener("click", save);
+$("#fallback-input").addEventListener("change", (e) => {
+  openFallback([...e.target.files]);
+  e.target.value = "";
+});
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    if (S.doc) save();
+  }
+});
+window.addEventListener("beforeunload", (e) => { if (S.dirty) e.preventDefault(); });
+</script>
+</body>
+</html>
