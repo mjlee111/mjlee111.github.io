@@ -7,7 +7,7 @@ const PROJECTS = [
     meta: "ROBROS",
     summary: "Developed software/hardware and imitation learning pipelines for ROBROS’s IGRIS-B humanoid robot, enabling it to learn and execute manipulation tasks from human demonstrations for practical real-world automation.",
     tags: ["AI", "Humanoid", "ACT"],
-    image: "images/igris-b_overview.png",
+    image: "images/igris-b_overview.webp",
     details: [
       { heading: "1. Hardware — Master Arm Design", text: "Designed and developed a master-arm teleoperation interface for intuitive, human-guided control of the IGRIS-B humanoid robot. Focused on hardware design and integration to enable reliable motion input and demonstration collection." },
       { heading: "2. Software — Teleoperation & Robotics Systems", text: "Developed the software pipeline spanning teleoperation, demonstration data collection and validation, robot control, and image processing. Integrated hardware interfaces, synchronized multimodal observations and actions, and established a consistent workflow for collecting high-quality training datasets." },
@@ -21,7 +21,7 @@ const PROJECTS = [
     meta: "RO:BIT",
     summary: "Developed robot bringup and user interface software, encapsulated system components for streamlined deployment, and implemented a panoramic imaging package that combines 360-degree camera feeds into a single panorama. Achieved 9th place overall at RoboCup Rescue 2024.",
     tags: ["RoboCup Rescue", "Image Projection"],
-    image: "images/kuls.jpg",
+    image: "images/kuls.webp",
     details: [
       { heading: "1. Robot Bringup & System Integration", text: "Developed a comprehensive bringup package to initialize and configure robot subsystems.\n\nOrganized startup procedures and software dependencies into a unified workflow.\n\nEncapsulated source code and system components to improve modularity, maintainability, and deployment." },
       { heading: "2. User GUI & Software Architecture", text: "Developed user-facing GUI components for robot operation and system interaction.\n\nStructured software modules behind clear interfaces to simplify integration and usage.\n\nImproved usability by consolidating robot initialization and operational workflows." },
@@ -36,7 +36,7 @@ const PROJECTS = [
     meta: "RO:BIT",
     summary: "Developed communication, localization, and autonomous flipper control systems for a search-and-rescue robot competing in RoboCup Rescue 2023. Achieved 7th place in Mobility, 4th place in Dexterity, and 6th place overall.",
     tags: ["RoboCup Rescue", "SLAM", "Controller"],
-    image: "images/kubo.png",
+    image: "images/kubo.webp",
     details: [
       { heading: "1. UDP Communication", text: "Implemented UDP-based communication between the robot and external control systems.\n\nDeveloped data transmission and reception logic for robot commands and status monitoring.\n\nSupported real-time communication for remote operation and system integration." },
       { heading: "2. Localization & 3D Mapping", text: "Developed a localization system using IMU measurements and wheel odometry.\n\nIntegrated inertial and odometry data to estimate the robot's position and orientation.\n\nSupported robot pose estimation for 3D mapping and navigation in unstructured environments." },
@@ -51,7 +51,7 @@ const PROJECTS = [
     meta: "RO:BIT",
     summary: "Developed SLAM and autonomous navigation algorithms for a mobile robot tasked with safely delivering packages to designated destinations. Integrated three 2D LiDAR sensors to improve environmental perception and enable reliable autonomous navigation.",
     tags: ["SLAM", "Autonomous Navigation"],
-    image: "images/baemin.png",
+    image: "images/baemin.webp",
     details: [
       { heading: "1. SLAM & Environment Mapping", text: "Developed and configured SLAM for mapping and localization in indoor environments.\n\nIntegrated 2D LiDAR sensor data to support environmental perception and map generation.\n\nTuned mapping and localization performance for autonomous delivery tasks." },
       { heading: "2. Autonomous Navigation & Obstacle Avoidance", text: "Developed navigation algorithms to guide the robot safely to designated delivery destinations.\n\nIntegrated three 2D LiDAR sensors mounted on the mobile robot for multi-directional obstacle detection.\n\nUsed LiDAR-based environmental perception to support collision avoidance and reliable path execution." },
@@ -79,7 +79,7 @@ const PROJECTS = [
     meta: "RO:BIT",
     summary: "Improved the robot operator interface and prepared object detection datasets for a defense robotics competition. Received 3rd place — Hanwha Defense Robotics Award.",
     tags: ["Defense Robotics"],
-    image: "images/defense.png",
+    image: "images/defense.webp",
     details: [
       { heading: "1. Object Detection Dataset Preparation", text: "Captured images and videos of target objects for object detection missions.\n\nProcessed and organized visual data for use in deep learning model training and evaluation.\n\nPrepared object-specific datasets to support detection performance in competition environments." },
       { heading: "2. User Interface & Robot Operation", text: "Developed and improved the user interface for robot operation during competition missions.\n\nImplemented mission progress indicators to display task completion status for judges and operators.\n\nIntegrated robot control functions and mission status visualization into a unified interface." },
@@ -94,7 +94,7 @@ const PROJECTS = [
     meta: "RO:BIT",
     summary: "Developed and optimized SLAM and autonomous navigation algorithms for the TurtleBot3 AutoRace competition. Improved navigation speed and accuracy by incorporating Voronoi-based path planning techniques, achieving 1st place and the Prime Minister’s Award.",
     tags: ["Robotics", "ROS", "TurtleBot3", "SLAM"],
-    image: "images/tb3.png",
+    image: "images/tb3.webp",
     details: [
       { heading: "1. SLAM & Environment Mapping", text: "Developed and tuned SLAM algorithms for real-time environment mapping and robot localization.\n\nImproved mapping and localization performance to support reliable autonomous navigation.\n\nIntegrated mapping outputs with the navigation pipeline." },
       { heading: "2. Autonomous Navigation & Path Planning", text: "Optimized existing navigation algorithms to improve speed and path-following accuracy.\n\nApplied Voronoi-based planning techniques to generate paths that account for environmental geometry and obstacle clearance.\n\nTuned navigation behavior to improve autonomous driving performance in the competition environment." },
@@ -176,7 +176,7 @@ const PROJECTS = [
     meta: "Personal",
     summary: "Developed a 3D point cloud mapping system by rotating a 2D LiDAR through 360 degrees using a motor and slip ring. Applied LOAM (Lidar Odometry and Mapping) to process the resulting point cloud data and perform 3D scan matching and mapping.",
     tags: [],
-    image: "images/loam.png",
+    image: "images/loam.webp",
     details: [
       { heading: "1. 2D-to-3D LiDAR Hardware System", text: "Designed a rotating LiDAR assembly using a motor and slip ring to enable continuous 360-degree scanning.\n\nCaptured spatial measurements across multiple rotation angles to reconstruct 3D environmental point clouds.\n\nIntegrated the rotating mechanism with the LiDAR data acquisition pipeline." },
       { heading: "2. LOAM-Based Point Cloud Processing", text: "Applied the LOAM algorithm to process 3D point cloud data generated from 2D LiDAR scans.\n\nDeveloped and integrated scan-matching algorithms to estimate sensor motion and align successive point clouds.\n\nCombined LiDAR odometry and mapping to reconstruct the surrounding environment in 3D." },
@@ -190,7 +190,7 @@ const PROJECTS = [
     meta: " Personal / Team Project",
     summary: "Developed an automated logistics sorting robot using OpenCV-based object localization and a belt-driven Cartesian robot with two stepper-motor axes. Received 4th place at Kwangwoon University’s 2022 Fall ChamBit Design Semester Exhibition.",
     tags: ["Computer Vision", "Embedded"],
-    image: "images/chbs.png",
+    image: "images/chbs.webp",
     details: [
       { heading: "1. Object Detection & Localization", text: "Implemented image processing with OpenCV to detect and localize different types of logistics items.\n\nExtracted object positions from camera images to determine sorting targets.\n\nUsed visual coordinates to guide the robot toward designated sorting locations." },
       { heading: "2. Cartesian Robot Design & Motion Control", text: "Designed and built a two-axis Cartesian robot using stepper motors and a pulley-belt transmission system.\n\nImplemented axis motion control to position the robot at target coordinates.\n\nIntegrated the mechanical structure and control electronics for repeatable positioning." },
@@ -205,7 +205,7 @@ const PROJECTS = [
     meta: "Personal",
     summary: "Designed a mobile manipulator for human detection and rescue in structured environments, combining YOLO-based object detection with sensor-driven autonomous navigation. Won 1st place at Kwangwoon University’s FEDEC Engineering Design Exhibition",
     tags: ["Embedded", "Mobile robot"],
-    image: "images/caterpion.png",
+    image: "images/caterpion.webp",
     details: [
       { heading: "1. Object Detection & Distance Estimation", text: "Implemented YOLO-based human/object detection using camera images.\n\nExtracted image-space object coordinates and estimated real-world distance to detected targets.\n\nConnected visual perception outputs to the robot’s target identification and approach behavior." },
       { heading: "2. Autonomous Navigation", text: "Developed a maze-solving navigation algorithm using two PSD distance sensors.\n\nProcessed sensor measurements to detect nearby obstacles and determine movement decisions.\n\nImplemented autonomous navigation logic to traverse and escape a maze." },
@@ -224,18 +224,24 @@ const list = document.getElementById("project-list");
 const dialog = document.getElementById("project-dialog");
 const content = document.getElementById("dlg-content");
 
+// Buttons allow phrasing content only, so the card is built from spans.
+// Accessible name is the title; the summary is the description.
 function renderList() {
   list.innerHTML = PROJECTS.map((p, i) => `
-    <button class="project" type="button" data-index="${i}" aria-haspopup="dialog">
-      <div class="project-thumb">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ""}</div>
-      <div class="project-body">
-        <div class="project-top"><span class="meta">${esc(p.meta)}</span><span class="year">${esc(p.year)}</span></div>
-        <h3>${esc(p.title)}</h3>
-        <p class="summary">${esc(p.summary)}</p>
-        ${p.tags?.length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-      </div>
+    <button class="project" type="button" data-index="${i}" aria-haspopup="dialog" aria-labelledby="project-${i}-title" aria-describedby="project-${i}-summary">
+      <span class="project-thumb">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ""}</span>
+      <span class="project-body">
+        <span class="project-top"><span class="meta">${esc(p.meta)}</span><span class="year">${esc(p.year)}</span></span>
+        <span class="project-title" id="project-${i}-title">${esc(p.title)}</span>
+        <span class="summary" id="project-${i}-summary">${esc(p.summary)}</span>
+        ${p.tags?.length ? `<span class="tags">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</span>` : ""}
+      </span>
     </button>`).join("");
 }
+
+// Blank lines in detail text separate paragraphs; single newlines become line breaks.
+const paragraphs = (text) => String(text).split(/\n\s*\n/)
+  .map((s) => `<p>${esc(s.trim()).replace(/\n/g, "<br>")}</p>`).join("");
 
 function openProject(i) {
   const p = PROJECTS[i];
@@ -243,7 +249,7 @@ function openProject(i) {
     <h2 id="dlg-title">${esc(p.title)}</h2>
     <p class="meta">${esc(p.year)}, ${esc(p.meta)}</p>
     ${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.title)}">` : ""}
-    ${(p.details || []).map((d) => `<h3>${esc(d.heading)}</h3><p>${esc(d.text)}</p>`).join("")}
+    ${(p.details || []).map((d) => `<h3>${esc(d.heading)}</h3>${paragraphs(d.text)}`).join("")}
     ${p.links?.length ? `<h3>Links</h3><p>${p.links.map((l) =>
       `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("<br>")}</p>` : ""}`;
   dialog.showModal();
@@ -254,8 +260,12 @@ list.addEventListener("click", (e) => {
   if (btn) openProject(Number(btn.dataset.index));
 });
 dialog.querySelector(".dlg-close").addEventListener("click", () => dialog.close());
-// Close on backdrop click
-dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+// Close on backdrop click. Clicks on the dialog's own padding also target the dialog, so test the box bounds.
+dialog.addEventListener("click", (e) => {
+  if (e.target !== dialog) return;
+  const r = dialog.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close();
+});
 
 renderList();
 
@@ -460,7 +470,12 @@ if (finePointer && !reduceMotion && window.self === window.top) {
   document.body.append(dot, ring);
   document.documentElement.classList.add("has-cursor");
   let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my, craf = 0;
-  const spin = () => { rx += (mx - rx) * .2; ry += (my - ry) * .2; ring.style.transform = `translate(${rx}px, ${ry}px)`; craf = requestAnimationFrame(spin); };
+  // Ring eases toward the pointer and stops once it has caught up; pointermove restarts it
+  const spin = () => {
+    rx += (mx - rx) * .2; ry += (my - ry) * .2;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    craf = Math.abs(mx - rx) + Math.abs(my - ry) > .1 ? requestAnimationFrame(spin) : 0;
+  };
   addEventListener("pointermove", (e) => {
     mx = e.clientX; my = e.clientY;
     dot.style.transform = `translate(${mx}px, ${my}px)`;
@@ -538,6 +553,12 @@ if (!reduceMotion && "IntersectionObserver" in window) {
   const glyphs = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789/#*<>";
   const scramble = (el) => {
     const final = el.textContent, n = final.length, start = performance.now(), dur = 650;
+    // Screen readers get the real text; the scrambled copy is hidden from them
+    const shown = document.createElement("span"), real = document.createElement("span");
+    shown.setAttribute("aria-hidden", "true");
+    real.className = "sr-only";
+    real.textContent = final;
+    el.replaceChildren(shown, real);
     const step = (t) => {
       const prog = Math.min(1, (t - start) / dur), reveal = prog * n;
       let out = "";
@@ -545,7 +566,7 @@ if (!reduceMotion && "IntersectionObserver" in window) {
         if (final[i] === " ") out += " ";
         else out += i < reveal ? final[i] : glyphs[(Math.random() * glyphs.length) | 0];
       }
-      el.textContent = out;
+      shown.textContent = out;
       if (prog < 1) requestAnimationFrame(step); else el.textContent = final;
     };
     requestAnimationFrame(step);

@@ -43,7 +43,8 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 5rem; -webkit-text-size-adjust: 100%; }
+/* scrollbar-gutter keeps the layout from shifting when an open dialog hides the scrollbar */
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; }
 html:has(dialog[open]) { overflow: hidden; }
 
 body {
@@ -311,6 +312,17 @@ h1 .accent {
   background: var(--border);
 }
 h3 { font-size: 1.1rem; margin: 2.5rem 0 1rem; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 .section-note { margin: -1.25rem 0 1.75rem; color: var(--text-soft); font-size: .95rem; }
 
 .about-grid {
@@ -401,8 +413,10 @@ h3 { font-size: 1.1rem; margin: 2.5rem 0 1rem; }
   transition: opacity .25s, transform .25s;
 }
 .project:hover::after, .project:focus-visible::after { opacity: 1; transform: none; }
+/* Card internals are spans (button content model), so block layout is set explicitly */
 .project-thumb {
   position: relative;
+  display: block;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
@@ -417,11 +431,11 @@ h3 { font-size: 1.1rem; margin: 2.5rem 0 1rem; }
 .project-body { display: flex; flex: 1; flex-direction: column; gap: .5rem; padding: 1.2rem 1.35rem 1.4rem; }
 .project-top { display: flex; justify-content: space-between; gap: 1rem; font-size: .82rem; color: var(--text-soft); }
 .project .year { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent-text); }
-.project h3 { margin: 0; font-size: 1.25rem; transition: color .2s; }
-.project:hover h3 { color: var(--accent-text); }
-.project .summary { margin: 0; color: var(--text-soft); font-size: .97rem; }
-.tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: auto 0 0; padding: .6rem 0 0; list-style: none; }
-.tags li {
+.project-title { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; transition: color .2s; }
+.project:hover .project-title { color: var(--accent-text); }
+.project .summary { display: block; color: var(--text-soft); font-size: .97rem; }
+.tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: auto 0 0; padding: .6rem 0 0; }
+.tags span {
   padding: .2rem .6rem;
   border-radius: 999px;
   background: var(--surface-2);
@@ -532,6 +546,7 @@ dialog[open] { animation: dlg-in .22s cubic-bezier(.2, .8, .2, 1); }
   text-transform: uppercase;
 }
 #dlg-content p { max-width: 64ch; margin: 0; }
+#dlg-content p + p { margin-top: .75rem; }
 
 /* Scroll reveal: class is added by script.js, so content stays visible without JS */
 .reveal {
@@ -677,7 +692,9 @@ dialog[open] { animation: dlg-in .22s cubic-bezier(.2, .8, .2, 1); }
 .cursor-ring.grow { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgb(255 255 255 / .15); }
 .cursor-ring.press { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
 .cursor-hidden { opacity: 0; }
-html.has-cursor, html.has-cursor * { cursor: none !important; }
+/* A modal dialog renders in the top layer above the custom cursor, so use the native cursor while one is open */
+html.has-cursor:not(:has(dialog[open])), html.has-cursor:not(:has(dialog[open])) * { cursor: none !important; }
+html:has(dialog[open]) :is(.cursor-dot, .cursor-ring) { visibility: hidden; }
 
 /* Button click ripple */
 .ripple {
@@ -773,8 +790,8 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
 .prose a:hover, .facts .links a:hover, .footer a:hover { background-size: 100% 1.5px; }
 
 /* Tag pop */
-.tags li { transition: transform .2s, background-color .2s, color .2s; }
-.tags li:hover { transform: translateY(-2px); background: var(--accent-soft); color: var(--accent-text); }
+.tags span { transition: transform .2s, background-color .2s, color .2s; }
+.tags span:hover { transform: translateY(-2px); background: var(--accent-soft); color: var(--accent-text); }
 
 /* Focus chips: magnetic pull + hover */
 .focus li { transition: border-color .2s, transform .25s cubic-bezier(.2, .8, .2, 1), background-color .2s, color .2s; }

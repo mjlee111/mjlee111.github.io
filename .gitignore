@@ -4,3 +4,9 @@ _backup/
 # Local source material — contains personal info, keep out of the public site
 *.pdf
 Screenshot_*.jpg
+
+# AI
+.omc/
+
+# Editor workspace settings and IntelliSense cache
+.vscode/
