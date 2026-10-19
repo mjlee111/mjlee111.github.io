@@ -2,6 +2,24 @@
 // image: path under images/ (optional). links: [{ label, url }] (optional).
 const PROJECTS = [
   {
+    title: "TOW3 Teleop Device",
+    year: "2026",
+    meta: "ROBROS",
+    summary: "Designed the circuits, firmware, and software for ROBROS’s wearable teleoperation device for the IGRIS-C humanoid. Operator arm and torso motion is read on the device and streamed to the robot over Cyclone DDS, with an on-device status display and a web dashboard for monitoring and setup.",
+    tags: ["Teleoperation", "Humanoid", "PCB Design", "Firmware", "DDS"],
+    image: "images/tow3.webp",
+    details: [
+      { heading: "Overview", text: "A wearable device for teleoperating humanoid robots, made up of a backpack control unit (I/O ports, Wi-Fi, OLED display, and an IMU for upper-body posture), two arm modules, and handheld end-effectors.\n\nOperator shoulder, elbow, and wrist motion maps onto the matching robot joints (14 DOF), torso lean drives the robot's waist, and joysticks on the end-effectors drive walking and turning.\n\nResponsible for the circuit design, firmware, and software." },
+      { heading: "1. Circuit Design", text: "Designed two STM32-based boards: a Raspberry Pi HAT that works as a co-processor, with the servo bus interface and an onboard 6-axis IMU, and a hand-controller PCB with a 2-axis joystick, buttons, and a 3D Hall-effect sensor for the analog trigger." },
+      { heading: "2. Firmware", text: "HAT: masters the DYNAMIXEL servo bus, reading all 14 arm joints and both hand controllers every cycle with fast sync reads and a per-device fallback. Runs a Madgwick AHRS on the IMU for torso orientation, and streams everything to the Pi over a high-speed UART link with COBS framing and CRC checks, taking commands such as controller LED states in return.\n\nHand controller: presents itself as a DYNAMIXEL Protocol 2.0 device, so one bus and one instruction set read servos and controllers alike. Includes a bootloader for firmware updates over the bus." },
+      { heading: "3. Device Software", text: "Built the device software on a Raspberry Pi in C++17 as independent processes that share data through lock-free shared-memory ring buffers. A single bridge process maps the readings to robot joint commands and streams them to IGRIS-C over Cyclone DDS.\n\nStreaming runs through a state machine (not initialized → ready → publishing). On engage it checks that the robot's state is fresh, then ramps each joint from the robot's current pose toward the operator's pose under a velocity limit, so the robot never jumps to a mismatched pose." },
+      { heading: "4. Control Algorithms", text: "Waist: a re-center button captures the operator's reference torso orientation. The relative orientation from the IMU is decomposed into yaw, roll, and pitch for the robot's waist, and implausible poses are rejected in favor of the last valid one.\n\nParallel linkages: the robot's wrists and waist use parallel four-bar linkages, so joint angles are converted to actual motor angles with four-bar inverse kinematics on the robot model (RBDL). The dashboard shows both joint space and motor space.\n\nTeleop inputs: joysticks map to walking velocity commands with per-axis deadzone and scaling, and the analog triggers give proportional hand grip.\n\nButton logic: non-reserved buttons run user-defined node graphs (trigger, condition, action, delay, sequence) edited in the dashboard. A loader validates each graph (single trigger, all nodes reachable, no cycles, known actions only) before it runs, and safety-critical controls stay hard-wired." },
+      { heading: "5. Status Display & Web Dashboard", text: "Built the OLED status screens showing domain ID, namespace, control rate, system state, and hardware telemetry.\n\nBuilt a web dashboard (React, TypeScript, three.js) with a C++ backend: a live 3D view of the robot, real-time joint and IMU plots, hardware error logs, and network and DDS settings." },
+      { heading: "6. Networking & Deployment", text: "Supported access-point, Wi-Fi, and Ethernet modes so the device can connect to the robot with or without existing network infrastructure.\n\nPackaged the full system into a single installer for the device, built with Docker and a Jenkins pipeline." }
+    ],
+    links: [{ label: "Teleop Device documentation (ROBROS Developer Center)", url: "https://www.robros.co.kr/en/developers/v2.1.1/a62aa64d-94a0-4018-bffe-b1227d67668d/Teleop_Device" }]
+  },
+  {
     title: "IGRIS-B",
     year: "2025",
     meta: "ROBROS",
