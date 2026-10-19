@@ -121,6 +121,22 @@ const PROJECTS = [
     links: [{ label: "DWA local planner with custom escape method", url: "https://youtu.be/4PapKKC_KMs" }]
   },
   {
+    title: "Dynamixel RDK",
+    year: "2024",
+    meta: "Personal",
+    summary: "Built an open-source ROS2 package for DYNAMIXEL smart actuators: Sync/Bulk Read and Write on the DYNAMIXEL SDK, lifecycle-managed bring-up, YAML configuration, and SI-unit control and status messages, plus a Qt GUI for monitoring and commanding motors.",
+    tags: ["ROS2", "DYNAMIXEL", "C++", "Qt"],
+    image: "images/dynamixel-rdk.webp",
+    details: [
+      { heading: "1. Bus Communication", text: "Built on the DYNAMIXEL SDK. Sync Read and Sync Write read and command every motor on the bus with a single instruction per cycle, and Bulk Read/Write are supported as well.\n\nAt startup each motor's indirect address table is mapped to the registers the node needs, so status and goal values sit in one contiguous block that a single packet covers. Includes control tables for the MX and PRO series." },
+      { heading: "2. Lifecycle Node", text: "Uses the ROS2 lifecycle so motor bring-up is explicit and repeatable: configure loads parameters, opens the port, and initializes the motors; activate enables torque and starts status publishing; deactivate disables torque; shutdown releases the port." },
+      { heading: "3. Units & Limits", text: "Commands and states use SI units (rad, rad/s, rad/s², mA), converted from each series' raw register scales.\n\nPosition goals outside the configured per-motor limits are rejected, and each motor's velocity limit is read from its EEPROM at startup." },
+      { heading: "4. Messages & GUI", text: "Custom messages carry per-motor goal position, profile velocity, and profile acceleration in, and torque state, error status, position, velocity, acceleration, current, voltage, and temperature out.\n\nBuilt Dynamixel RDK Manager, a Qt GUI that lists each motor's live status and publishes position, velocity, and acceleration goals." },
+      { heading: "5. Configuration & CI", text: "Motor IDs, series, and position limits are set per motor from YAML or launch arguments. Builds and tests run on ROS2 Humble with GitHub Actions. Released under the Apache 2.0 license." }
+    ],
+    links: [{ label: "Source on GitHub", url: "https://github.com/mjlee111/dynamixel-RDK" }, { label: "Dynamixel RDK Manager (GUI)", url: "https://github.com/mjlee111/dynamixel-RDK-manager" }, { label: "Blog post (Korean)", url: "https://menggu1234.tistory.com/31" }]
+  },
+  {
     title: "image_recognition",
     year: "2024",
     meta: "Personal",
