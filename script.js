@@ -2,6 +2,23 @@
 // image: path under images/ (optional). links: [{ label, url }] (optional).
 const PROJECTS = [
   {
+    title: "IGRIS-C",
+    year: "2026",
+    meta: "ROBROS",
+    summary: "Developed software for ROBROS’s IGRIS-C humanoid robot, including camera and sensor streaming, the robot SDK, hand and end-effector control, robot controller features, and device monitoring tools.",
+    tags: ["Humanoid", "Software", "PCB Design"],
+    image: "images/igrisc-hero.png",
+    details: [
+      { heading: "1. Camera & Sensor Streaming", text: "Developed the service that streams the robot's stereo, mono, and depth cameras and IMU data, along with its installation and configuration tools." },
+      { heading: "2. Robot SDK", text: "Added message types and examples to the IGRIS-C SDK for camera sensors, VR devices, device status, and the master arm, and built tooling that generates the C++ and Python interfaces automatically." },
+      { heading: "3. Hands & End-Effectors", text: "Developed control software for the robot's hands, grippers, and magnetic hand, including safe initialization, calibration, and recovery from motor faults." },
+      { heading: "4. Robot Controller", text: "Developed a slow start for when the robot enters low-level control, and contributed to walking control, IMU processing, and simulation." },
+      { heading: "5. Monitoring Tools", text: "Developed a device manager that monitors the robot's devices and shows their status in desktop and web viewers, and added a 3D robot model view to the robot's web interface." },
+      { heading: "6. Other Work", text: "Developed the IMU driver and a standalone camera recording device, and worked on the master arm software and a carrier board for the chest computer." }
+    ],
+    links: [{ label: "IGRIS-C (ROBROS website)", url: "https://www.robros.co.kr/ko/igrisc" }]
+  },
+  {
     title: "TOW3 Teleop Device",
     year: "2026",
     meta: "ROBROS",
@@ -259,16 +276,15 @@ const dialog = document.getElementById("project-dialog");
 const content = document.getElementById("dlg-content");
 
 // Buttons allow phrasing content only, so the card is built from spans.
-// Accessible name is the title; the summary is the description.
+// Accessible name is the title; the summary is the description. Tags are shown in the dialog.
 function renderList() {
   list.innerHTML = PROJECTS.map((p, i) => `
     <button class="project" type="button" data-index="${i}" aria-haspopup="dialog" aria-labelledby="project-${i}-title" aria-describedby="project-${i}-summary">
       <span class="project-thumb">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ""}</span>
       <span class="project-body">
-        <span class="project-top"><span class="meta">${esc(p.meta)}</span><span class="year">${esc(p.year)}</span></span>
         <span class="project-title" id="project-${i}-title">${esc(p.title)}</span>
+        <span class="project-meta"><span class="meta">${esc(p.meta)}</span><span class="year">${esc(p.year)}</span></span>
         <span class="summary" id="project-${i}-summary">${esc(p.summary)}</span>
-        ${p.tags?.length ? `<span class="tags">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</span>` : ""}
       </span>
     </button>`).join("");
 }
@@ -282,6 +298,7 @@ function openProject(i) {
   content.innerHTML = `
     <h2 id="dlg-title">${esc(p.title)}</h2>
     <p class="meta">${esc(p.year)}, ${esc(p.meta)}</p>
+    ${p.tags?.length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
     ${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.title)}">` : ""}
     ${(p.details || []).map((d) => `<h3>${esc(d.heading)}</h3>${paragraphs(d.text)}`).join("")}
     ${p.links?.length ? `<h3>Links</h3><p>${p.links.map((l) =>
@@ -303,7 +320,8 @@ dialog.addEventListener("click", (e) => {
 
 renderList();
 
-// Highlight the nav link of the section crossing the middle of the viewport
+// Highlight the nav link of the section crossing a band 25-30% down the viewport.
+// The band sits high so a short section scrolled to the top (scroll-padding-top) still covers it on its own.
 const navLinks = [...document.querySelectorAll(".topbar nav a")];
 if ("IntersectionObserver" in window) {
   const navObserver = new IntersectionObserver((entries) => {
@@ -314,7 +332,7 @@ if ("IntersectionObserver" in window) {
         else a.removeAttribute("aria-current");
       });
     });
-  }, { rootMargin: "-45% 0px -50% 0px" });
+  }, { rootMargin: "-25% 0px -70% 0px" });
   document.querySelectorAll("main > section[id]").forEach((s) => navObserver.observe(s));
 }
 
@@ -464,7 +482,7 @@ if (canvas && heroEl && finePointer && !reduceMotion) {
     }));
   };
   const draw = () => {
-    const col = rootStyle.getPropertyValue("--accent").trim() || "#ff7a1a";
+    const col = rootStyle.getPropertyValue("--text-soft").trim() || "#8f8f8f";
     ctx.clearRect(0, 0, W, H);
     for (const p of pts) {
       p.x += p.vx; p.y += p.vy;
@@ -559,20 +577,8 @@ if (toTop) {
   upd();
 }
 
-// Tilt + spotlight on panels and the facts card, magnetic focus chips
+// Magnetic focus chips
 if (finePointer && !reduceMotion) {
-  const bindTiltSpot = (el, maxDeg) => {
-    el.addEventListener("pointermove", (e) => {
-      const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-      el.style.setProperty("--ry", `${((px - .5) * maxDeg).toFixed(2)}deg`);
-      el.style.setProperty("--rx", `${((.5 - py) * maxDeg).toFixed(2)}deg`);
-      el.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
-      el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
-    });
-    el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
-  };
-  document.querySelectorAll(".panel, .facts").forEach((el) => bindTiltSpot(el, 5));
   document.querySelectorAll(".focus li").forEach((li) => {
     li.addEventListener("pointermove", (e) => {
       const r = li.getBoundingClientRect();
